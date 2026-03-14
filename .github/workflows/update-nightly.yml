@@ -1,0 +1,66 @@
+name: Update Nightly Formula
+
+on:
+  schedule:
+    - cron: "10 2 * * *" # every day at 2:10 AM UTC
+  workflow_dispatch:
+
+jobs:
+  nightly:
+    name: Update nightly formula
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get nightly version
+        id: versions
+        run: |
+          LATEST=$(curl -sf "https://api.github.com/repos/lightpanda-io/browser/releases/tags/nightly" \
+            | grep '"published_at"' \
+            | sed 's/.*"published_at": *"\([0-9-]*\).*/\1/')
+          LATEST="nightly-${LATEST}"
+          CURRENT=$(grep '^  version ' Formula/lightpanda-nightly.rb | sed 's/.*"\(.*\)".*/\1/')
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "Current: $CURRENT — Latest: $LATEST"
+
+      - name: Update nightly formula
+        if: steps.versions.outputs.latest != steps.versions.outputs.current
+        env:
+          LATEST: ${{ steps.versions.outputs.latest }}
+          CURRENT: ${{ steps.versions.outputs.current }}
+        run: |
+          BASE="https://github.com/lightpanda-io/browser/releases/download/nightly"
+
+          echo "Fetching aarch64 binary..."
+          AARCH64_SHA=$(curl -sL "${BASE}/lightpanda-aarch64-macos" | sha256sum | awk '{print $1}')
+
+          echo "Fetching x86_64 binary..."
+          X86_SHA=$(curl -sL "${BASE}/lightpanda-x86_64-macos" | sha256sum | awk '{print $1}')
+
+          OLD_AARCH64_SHA=$(grep -A1 'aarch64-macos"' Formula/lightpanda-nightly.rb | grep sha256 | sed 's/.*sha256 "\([^"]*\)".*/\1/')
+          OLD_X86_SHA=$(grep -A1 'x86_64-macos"' Formula/lightpanda-nightly.rb | grep sha256 | sed 's/.*sha256 "\([^"]*\)".*/\1/')
+
+          sed -i "s|version \"${CURRENT}\"|version \"${LATEST}\"|" Formula/lightpanda-nightly.rb
+          sed -i "s|${OLD_AARCH64_SHA}|${AARCH64_SHA}|" Formula/lightpanda-nightly.rb
+          sed -i "s|${OLD_X86_SHA}|${X86_SHA}|" Formula/lightpanda-nightly.rb
+
+      - name: Open pull request
+        if: steps.versions.outputs.latest != steps.versions.outputs.current
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "lightpanda-nightly ${{ steps.versions.outputs.latest }}"
+          branch: update/${{ steps.versions.outputs.latest }}
+          title: "Update lightpanda-nightly to ${{ steps.versions.outputs.latest }}"
+          body: |
+            Updates `lightpanda-nightly` from `${{ steps.versions.outputs.current }}` to `${{ steps.versions.outputs.latest }}`.
+
+            [Nightly release](https://github.com/lightpanda-io/browser/releases/tag/nightly)
+
+      - name: Auto-merge pull request
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --auto --merge ${{ steps.cpr.outputs.pull-request-number }}

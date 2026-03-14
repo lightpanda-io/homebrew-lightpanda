@@ -1,0 +1,63 @@
+name: Update Stable Formula
+
+on:
+  workflow_dispatch:
+
+jobs:
+  stable:
+    name: Update stable formula
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get latest version
+        id: versions
+        run: |
+          LATEST=$(curl -sf "https://api.github.com/repos/lightpanda-io/browser/releases/latest" \
+            | grep '"tag_name"' \
+            | sed 's/.*"tag_name": *"v\([^"]*\)".*/\1/')
+          CURRENT=$(grep -oE 'download/v[0-9]+\.[0-9]+\.[0-9]+' Formula/lightpanda.rb | head -1 | sed 's/download\/v//')
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "Current: $CURRENT — Latest: $LATEST"
+
+      - name: Update formula
+        if: steps.versions.outputs.latest != steps.versions.outputs.current
+        env:
+          LATEST: ${{ steps.versions.outputs.latest }}
+          CURRENT: ${{ steps.versions.outputs.current }}
+        run: |
+          BASE="https://github.com/lightpanda-io/browser/releases/download/v${LATEST}"
+
+          echo "Fetching aarch64 binary..."
+          AARCH64_SHA=$(curl -sL "${BASE}/lightpanda-aarch64-macos" | sha256sum | awk '{print $1}')
+
+          echo "Fetching x86_64 binary..."
+          X86_SHA=$(curl -sL "${BASE}/lightpanda-x86_64-macos" | sha256sum | awk '{print $1}')
+
+          OLD_AARCH64_SHA=$(grep -A1 'aarch64-macos"' Formula/lightpanda.rb | grep sha256 | sed 's/.*sha256 "\([^"]*\)".*/\1/')
+          OLD_X86_SHA=$(grep -A1 'x86_64-macos"' Formula/lightpanda.rb | grep sha256 | sed 's/.*sha256 "\([^"]*\)".*/\1/')
+
+          sed -i "s|/download/v${CURRENT}/|/download/v${LATEST}/|g" Formula/lightpanda.rb
+          sed -i "s|${OLD_AARCH64_SHA}|${AARCH64_SHA}|" Formula/lightpanda.rb
+          sed -i "s|${OLD_X86_SHA}|${X86_SHA}|" Formula/lightpanda.rb
+
+      - name: Open pull request
+        if: steps.versions.outputs.latest != steps.versions.outputs.current
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "lightpanda ${{ steps.versions.outputs.latest }}"
+          branch: update/v${{ steps.versions.outputs.latest }}
+          title: "Update lightpanda to ${{ steps.versions.outputs.latest }}"
+          body: |
+            Updates `lightpanda` from `${{ steps.versions.outputs.current }}` to `${{ steps.versions.outputs.latest }}`.
+
+            [Release notes](https://github.com/lightpanda-io/browser/releases/tag/v${{ steps.versions.outputs.latest }})
+
+      - name: Auto-merge pull request
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --auto --merge ${{ steps.cpr.outputs.pull-request-number }}
