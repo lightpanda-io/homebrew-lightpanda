@@ -13,10 +13,10 @@ class Lightpanda < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-macos"
-      sha256 "32ca6339d0110f81aa051805e7cf4874ebeb0032d62df4abf00e75469f416e71"
+      sha256 "c7bfc67c492ae7f0b18de8542d75c7fe8e4ac032fb62366deb5ac67af0e42b59"
     else
       url "https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-macos"
-      sha256 "b9cae9277271fd140e52b3a4bfdcc0aa06728ff2309c4673e79a2809158528bb"
+      sha256 "517a2aadfa1074c13be477867e59c37e65bda7b38f03494b0df9be61547fe715"
     end
   end
 
