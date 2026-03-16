@@ -20,7 +20,7 @@ class LightpandaNightly < Formula
     end
   end
 
-  conflicts_with "lightpanda-io/lightpanda/lightpanda", because: "both install a `lightpanda` binary"
+  conflicts_with "lightpanda-io/browser/lightpanda", because: "both install a `lightpanda` binary"
 
   def install
     bin.install Dir["lightpanda-*"].first => "lightpanda"

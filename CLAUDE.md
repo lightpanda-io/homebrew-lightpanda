@@ -20,8 +20,8 @@ The binary is installed as `lightpanda` in the Homebrew bin directory. The two f
 
 | Formula | Install command | Version |
 |---|---|---|
-| `lightpanda` | `brew install lightpanda-io/lightpanda/lightpanda` | Latest stable release |
-| `lightpanda-nightly` | `brew install lightpanda-io/lightpanda/lightpanda-nightly` | Nightly build (versioned by publish date) |
+| `lightpanda` | `brew install lightpanda-io/browser/lightpanda` | Latest stable release |
+| `lightpanda-nightly` | `brew install lightpanda-io/browser/lightpanda-nightly` | Nightly build (versioned by commit id) |
 
 ## Updating the formulas
 
@@ -41,7 +41,7 @@ To verify a formula passes Homebrew's strict linting rules before submitting to 
 
 ```sh
 brew tap local/lightpanda
-cp Formula/lightpanda.rb $(brew --repository)/Library/Taps/local/homebrew-lightpanda/Formula/lightpanda.rb
+cp Formula/lightpanda.rb $(brew --repository)/Library/Taps/local/homebrew-browser/Formula/lightpanda.rb
 brew audit --strict --formula local/lightpanda/lightpanda
 brew untap local/lightpanda
 ```
