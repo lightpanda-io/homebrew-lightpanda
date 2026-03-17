@@ -8,8 +8,9 @@ update() {
   local FORMULA="${DIR}/Formula/lightpanda.rb"
 
   LATEST=$(curl -sf "https://api.github.com/repos/${REPO}/releases/tags/nightly" \
-    | grep '"published_at"' \
-    | sed 's/.*"published_at": *"\([0-9-]*\).*/\1/')
+    | grep '"updated_at"' \
+    | head -1 \
+    | sed 's/.*"updated_at": *"\([0-9-]*\).*/\1/')
   LATEST="nightly-${LATEST}"
   CURRENT=$(grep '^  version ' "$FORMULA" | sed 's/.*"\(.*\)".*/\1/')
 

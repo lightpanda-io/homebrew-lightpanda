@@ -16,8 +16,9 @@ jobs:
         id: versions
         run: |
           LATEST=$(curl -sf "https://api.github.com/repos/lightpanda-io/browser/releases/tags/nightly" \
-            | grep '"published_at"' \
-            | sed 's/.*"published_at": *"\([0-9-]*\).*/\1/')
+            | grep '"updated_at"' \
+            | head -1 \
+            | sed 's/.*"updated_at": *"\([0-9-]*\).*/\1/')
           LATEST="nightly-${LATEST}"
           CURRENT=$(grep '^  version ' Formula/lightpanda.rb | sed 's/.*"\(.*\)".*/\1/')
           echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
