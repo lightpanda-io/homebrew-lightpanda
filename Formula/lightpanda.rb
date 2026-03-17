@@ -1,12 +1,12 @@
 class Lightpanda < Formula
   desc "Headless browser for AI agents and automation (nightly build)"
   homepage "https://github.com/lightpanda-io/browser"
-  version "nightly-2026-03-17"
+  version "2026-03-17"
 
   livecheck do
     url "https://api.github.com/repos/lightpanda-io/browser/releases/tags/nightly"
     strategy :json do |json|
-      json["updated_at"]&.slice(0, 10)&.then { |d| "nightly-#{d}" }
+      json["updated_at"]&.slice(0, 10)
     end
   end
 

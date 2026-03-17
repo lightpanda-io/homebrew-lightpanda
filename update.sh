@@ -11,7 +11,6 @@ update() {
     | grep '"updated_at"' \
     | head -1 \
     | sed 's/.*"updated_at": *"\([0-9-]*\).*/\1/')
-  LATEST="nightly-${LATEST}"
   CURRENT=$(grep '^  version ' "$FORMULA" | sed 's/.*"\(.*\)".*/\1/')
 
   echo "[nightly] Current: $CURRENT — Latest: $LATEST"

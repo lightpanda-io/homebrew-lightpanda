@@ -22,7 +22,6 @@ jobs:
             | grep '"updated_at"' \
             | head -1 \
             | sed 's/.*"updated_at": *"\([0-9-]*\).*/\1/')
-          LATEST="nightly-${LATEST}"
           CURRENT=$(grep '^  version ' Formula/lightpanda.rb | sed 's/.*"\(.*\)".*/\1/')
           echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
           echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
