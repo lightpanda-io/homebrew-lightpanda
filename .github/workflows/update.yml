@@ -22,7 +22,7 @@ jobs:
             | grep '"updated_at"' \
             | head -1 \
             | sed 's/.*"updated_at": *"\([0-9-]*\).*/\1/')
-          CURRENT=$(grep '^  version ' Formula/lightpanda.rb | sed 's/.*"\(.*\)".*/\1/')
+          CURRENT=$(grep '^  version ' Formula/lightpanda-nightly.rb | sed 's/.*"\(.*\)".*/\1/')
           echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
           echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
           echo "Current: $CURRENT — Latest: $LATEST"
@@ -35,18 +35,28 @@ jobs:
         run: |
           BASE="https://github.com/lightpanda-io/browser/releases/download/nightly"
 
-          echo "Fetching aarch64 binary..."
-          AARCH64_SHA=$(curl -sL "${BASE}/lightpanda-aarch64-macos" | sha256sum | awk '{print $1}')
+          echo "Fetching aarch64-macos binary..."
+          AARCH64_MACOS_SHA=$(curl -sL "${BASE}/lightpanda-aarch64-macos" | sha256sum | awk '{print $1}')
 
-          echo "Fetching x86_64 binary..."
-          X86_SHA=$(curl -sL "${BASE}/lightpanda-x86_64-macos" | sha256sum | awk '{print $1}')
+          echo "Fetching x86_64-macos binary..."
+          X86_MACOS_SHA=$(curl -sL "${BASE}/lightpanda-x86_64-macos" | sha256sum | awk '{print $1}')
 
-          OLD_AARCH64_SHA=$(grep -A1 'aarch64-macos"' Formula/lightpanda.rb | grep sha256 | sed 's/.*sha256 "\([^"]*\)".*/\1/')
-          OLD_X86_SHA=$(grep -A1 'x86_64-macos"' Formula/lightpanda.rb | grep sha256 | sed 's/.*sha256 "\([^"]*\)".*/\1/')
+          echo "Fetching aarch64-linux binary..."
+          AARCH64_LINUX_SHA=$(curl -sL "${BASE}/lightpanda-aarch64-linux" | sha256sum | awk '{print $1}')
 
-          sed -i "s|version \"${CURRENT}\"|version \"${LATEST}\"|" Formula/lightpanda.rb
-          sed -i "s|${OLD_AARCH64_SHA}|${AARCH64_SHA}|" Formula/lightpanda.rb
-          sed -i "s|${OLD_X86_SHA}|${X86_SHA}|" Formula/lightpanda.rb
+          echo "Fetching x86_64-linux binary..."
+          X86_LINUX_SHA=$(curl -sL "${BASE}/lightpanda-x86_64-linux" | sha256sum | awk '{print $1}')
+
+          OLD_AARCH64_MACOS_SHA=$(grep -A1 'aarch64-macos"' Formula/lightpanda-nightly.rb | grep sha256 | sed 's/.*sha256 "\([^"]*\)".*/\1/')
+          OLD_X86_MACOS_SHA=$(grep -A1 'x86_64-macos"' Formula/lightpanda-nightly.rb | grep sha256 | sed 's/.*sha256 "\([^"]*\)".*/\1/')
+          OLD_AARCH64_LINUX_SHA=$(grep -A1 'aarch64-linux"' Formula/lightpanda-nightly.rb | grep sha256 | sed 's/.*sha256 "\([^"]*\)".*/\1/')
+          OLD_X86_LINUX_SHA=$(grep -A1 'x86_64-linux"' Formula/lightpanda-nightly.rb | grep sha256 | sed 's/.*sha256 "\([^"]*\)".*/\1/')
+
+          sed -i "s|version \"${CURRENT}\"|version \"${LATEST}\"|" Formula/lightpanda-nightly.rb
+          sed -i "s|${OLD_AARCH64_MACOS_SHA}|${AARCH64_MACOS_SHA}|" Formula/lightpanda-nightly.rb
+          sed -i "s|${OLD_X86_MACOS_SHA}|${X86_MACOS_SHA}|" Formula/lightpanda-nightly.rb
+          sed -i "s|${OLD_AARCH64_LINUX_SHA}|${AARCH64_LINUX_SHA}|" Formula/lightpanda-nightly.rb
+          sed -i "s|${OLD_X86_LINUX_SHA}|${X86_LINUX_SHA}|" Formula/lightpanda-nightly.rb
 
       - name: Open pull request
         if: steps.versions.outputs.latest != steps.versions.outputs.current
